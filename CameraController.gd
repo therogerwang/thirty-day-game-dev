@@ -1,15 +1,17 @@
 extends Spatial
 
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
+# Outside Objects
 onready var camera = $Camera
-
-const speed = .2
-const ray_length = 500
-var velocity = Vector3(0,0,0)
+onready var selection_box = $SelectionBox
+const class_worker = preload("res://Assets/Worker.gd")
+const speed = .2					# Camera Movement Speed
+const ray_length = 500				#
+var velocity = Vector3(0,0,0)		# Current Camera Velocity
 var environ_collision_mask = 1
+
+const player_team = 0				# Team identifier for the player
+var selected_units = []				# Array to hold selected units
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -51,9 +53,23 @@ func _physics_process(delta):
 		move_all_units(mouse_pos)
 			
 #		print("clicked position %s" % clicked_pos )
-		
+	if Input.is_action_just_pressed("ui_select"):
+		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
+		if get_obj_under_mouse(mouse_pos, environ_collision_mask) is class_worker:
+			print("IS worker!!")
 
 
+
+
+
+
+
+"""
+Performs a raycast from mouse position using raycast_from_mouse().
+
+Returns the 3D coordinates of the intersection of the ray and the first collidable
+object. If no valid collision detected, then returns null.
+"""
 func get_mouse_raycast_collision_coords(mouse_pos, collision_mask):
 	var space_state = get_world().direct_space_state
 	var ray = raycast_from_mouse(mouse_pos)
@@ -68,17 +84,23 @@ func get_mouse_raycast_collision_coords(mouse_pos, collision_mask):
 	else:
 		return null
 
+
 """
 Performs a raycast from mouse position.
-Returns an array of [start_ray position, end_ray_position]
+Returns an array of [start_ray position, end_ray_position] representing the ray.
 """
 func raycast_from_mouse(mouse_pos: Vector2) -> Array:
 	var ray_origin: Vector3 = camera.project_ray_origin(mouse_pos)
 	var ray_end: Vector3 = ray_origin + camera.project_ray_normal(mouse_pos) * ray_length 
 	
 	return [ray_origin, ray_end]
-	
-func move_all_units(mouse_pos: Vector2):
+
+
+"""
+Given a mouse position, sends move orders to all units to that position raycasted
+in 3D space.
+"""
+func move_all_units(mouse_pos: Vector2) -> void:
 	var clicked_pos = get_mouse_raycast_collision_coords(mouse_pos, environ_collision_mask)
 	if clicked_pos == null:
 		#invalid click
@@ -86,3 +108,53 @@ func move_all_units(mouse_pos: Vector2):
 	print("clicked position ", clicked_pos)
 	get_tree().call_group("units","move_to", clicked_pos)
 #
+
+
+
+
+
+################ UNIT SELECTION ######################
+"""
+Given an array of objects to select, checks each obj,and updates the class's 
+selected_units array and performs routines associated with unit selection on each unit.
+
+"""
+func select_units(obj_array: Array):
+	
+	var units = []
+	
+	if obj_array.size() == 1:
+		pass
+	else:
+	
+		for unit in obj_array:
+			if unit is class_worker:
+				unit.team 
+			
+	
+
+################ MISC HELPER FUNCTIONS ######################
+
+"""
+Given a mouse position and a collision mask, gets the object directly under
+the current mouse position in 3D space.
+
+Returns the object node directly under mouse_pos and on the same collision space
+if one exists. Otherwise, returns null.
+"""
+func get_obj_under_mouse(mouse_pos: Vector2, collision_mask):
+	
+	# raycast and get ray collision information
+	var space_state = get_world().direct_space_state
+	var ray: Array = raycast_from_mouse(mouse_pos)
+	var ray_start = ray[0]
+	var ray_end = ray[1]
+	var selected_dict: Dictionary = space_state.intersect_ray(ray_start, ray_end,
+							[self], collision_mask)
+	
+	if selected_dict.empty():
+		#nothing selected
+		return
+	
+	#get collided obj
+	return selected_dict["collider"]
