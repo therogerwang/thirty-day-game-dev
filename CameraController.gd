@@ -5,13 +5,13 @@ extends Spatial
 onready var camera = $Camera
 onready var selection_box = $SelectionBox
 const class_worker = preload("res://Assets/Worker.gd")
-const speed = .2					# Camera Movement Speed
+const speed = .3					# Camera Movement Speed
 const ray_length = 500				#
 var velocity = Vector3(0,0,0)		# Current Camera Velocity
 var environ_collision_mask = 1
 
 const player_team = 0				# Team identifier for the player
-var selected_units = []				# Array to hold selected units
+var selected_units : Array = []				# Array to hold selected units
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -20,7 +20,27 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	perform_camera_movement()
 	
+	
+func _physics_process(delta):
+	
+	if Input.is_action_just_pressed("ui_move_click"):
+		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
+		move_all_units(mouse_pos)
+			
+#		print("clicked position %s" % clicked_pos )
+	if Input.is_action_just_pressed("ui_select"):
+		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
+		if get_obj_under_mouse(mouse_pos, environ_collision_mask) is class_worker:
+			print("IS worker!!")
+
+
+
+"""
+Handles all camera controls and movement. Should be called every frame.
+"""
+func perform_camera_movement() -> void:
 	#base camera controls
 	# Zoom in and out
 	if Input.is_action_just_released("ui_zoom_in"):
@@ -42,27 +62,10 @@ func _process(delta):
 	if Input.is_action_pressed("ui_left"):
 		velocity.x -= speed
 	
+	#update camera controller velocity
 	global_translate(velocity)
 	velocity.x = 0
 	velocity.z= 0
-
-func _physics_process(delta):
-	
-	if Input.is_action_just_pressed("ui_move_click"):
-		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
-		move_all_units(mouse_pos)
-			
-#		print("clicked position %s" % clicked_pos )
-	if Input.is_action_just_pressed("ui_select"):
-		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
-		if get_obj_under_mouse(mouse_pos, environ_collision_mask) is class_worker:
-			print("IS worker!!")
-
-
-
-
-
-
 
 """
 Performs a raycast from mouse position using raycast_from_mouse().
@@ -119,19 +122,29 @@ Given an array of objects to select, checks each obj,and updates the class's
 selected_units array and performs routines associated with unit selection on each unit.
 
 """
-func select_units(obj_array: Array):
+func select_units(obj_array: Array) -> void:
 	
-	var units = []
+	var units : Array = []
+	
+	# deselect currently selected units
+	for unit in selected_units:
+		unit.call("on_deselect")
 	
 	if obj_array.size() == 1:
-		pass
+		# can select any unit and info
+		var unit : class_worker = obj_array[0]
+		unit.on_select()
+		units = obj_array
 	else:
-	
+		# can only select units of player's team. also handles 0 case
 		for unit in obj_array:
 			if unit is class_worker:
-				unit.team 
-			
-	
+				if unit.team == Globals.TEAMS.PLAYER:
+					units.append(unit)
+					unit.on_select()
+					
+	selected_units = units
+
 
 ################ MISC HELPER FUNCTIONS ######################
 
