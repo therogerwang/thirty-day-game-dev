@@ -49,6 +49,7 @@ func on_deselect():
 
 #sets a path toward a new target
 func move_to( target : Vector3):
+	
 	path = nav_parent.get_simple_path(global_transform.origin, target)
 	print("move to called path =", path)
 	path_idx = 0

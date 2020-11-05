@@ -122,6 +122,10 @@ func move_selected_units(mouse_pos: Vector2, team_ownership: int) -> void:
 	print("moving selected units")
 	
 	var clicked_pos = get_mouse_raycast_collision_coords(mouse_pos, environ_collision_mask)
+	
+	if clicked_pos == null:
+		return
+	
 	for obj in selected_units:
 		if obj is class_worker:
 			if obj.team == team_ownership:
