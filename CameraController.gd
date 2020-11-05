@@ -12,7 +12,7 @@ var environ_collision_mask = 1
 
 const player_team = 0				# Team identifier for the player
 var selected_units : Array = []				# Array to hold selected units
-
+var start_sel_pos = Vector2()
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
@@ -23,6 +23,30 @@ func _process(delta):
 	perform_camera_movement()
 	
 	
+	var mouse_pos : Vector2 = get_viewport().get_mouse_position()
+	if Input.is_action_just_pressed("ui_select"):
+		selection_box.start_sel_pos = mouse_pos
+		start_sel_pos = mouse_pos
+		
+			
+			
+	if Input.is_action_pressed("ui_select"):
+		selection_box.m_pos = mouse_pos
+		selection_box.is_visible = true
+	else:
+		selection_box.is_visible = false
+		
+	if Input.is_action_just_released("ui_select"):
+		
+		if abs(start_sel_pos.distance_to(mouse_pos)) > 8:
+			update_player_selection(get_units_in_box(start_sel_pos, mouse_pos))
+		else:
+			update_player_selection([
+				get_obj_under_mouse(mouse_pos, environ_collision_mask)
+			])
+		
+		
+	
 func _physics_process(delta):
 	
 	if Input.is_action_just_pressed("ui_move_click"):
@@ -30,10 +54,7 @@ func _physics_process(delta):
 		move_all_units(mouse_pos)
 			
 #		print("clicked position %s" % clicked_pos )
-	if Input.is_action_just_pressed("ui_select"):
-		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
-		if get_obj_under_mouse(mouse_pos, environ_collision_mask) is class_worker:
-			print("IS worker!!")
+	
 
 
 
@@ -121,8 +142,9 @@ func move_all_units(mouse_pos: Vector2) -> void:
 Given an array of objects to select, checks each obj,and updates the class's 
 selected_units array and performs routines associated with unit selection on each unit.
 
+With multiple units, will only select those on the player's team.
 """
-func select_units(obj_array: Array) -> void:
+func update_player_selection(obj_array: Array) -> void:
 	
 	var units : Array = []
 	
@@ -131,10 +153,12 @@ func select_units(obj_array: Array) -> void:
 		unit.call("on_deselect")
 	
 	if obj_array.size() == 1:
+		
 		# can select any unit and info
-		var unit : class_worker = obj_array[0]
-		unit.on_select()
-		units = obj_array
+		if obj_array[0] is class_worker:
+			var unit : class_worker = obj_array[0]
+			unit.on_select()
+			units = obj_array
 	else:
 		# can only select units of player's team. also handles 0 case
 		for unit in obj_array:
@@ -144,6 +168,8 @@ func select_units(obj_array: Array) -> void:
 					unit.on_select()
 					
 	selected_units = units
+
+
 
 
 ################ MISC HELPER FUNCTIONS ######################
@@ -171,3 +197,30 @@ func get_obj_under_mouse(mouse_pos: Vector2, collision_mask):
 	
 	#get collided obj
 	return selected_dict["collider"]
+
+
+"""
+Given two corners of a box, gets the objects of group 'units' within the box.
+
+Returns the units within the drawn box as an array.
+"""
+func get_units_in_box(top_left: Vector2, bot_right: Vector2) -> Array:
+	
+	# deal with inverted box corners
+	if top_left.x > bot_right.x:
+		var tmp = top_left.x
+		top_left.x = bot_right.x
+		bot_right.x = tmp
+	if top_left.y > bot_right.y:
+		var tmp = top_left.y
+		top_left.y = bot_right.y
+		bot_right.y = tmp
+	var box = Rect2(top_left, bot_right - top_left)
+	
+	# get the units in the box
+	var box_selected_units = []
+	for object in get_tree().get_nodes_in_group("units"):
+		var unit : class_worker = object
+		if box.has_point(camera.unproject_position(unit.global_transform.origin)):
+			box_selected_units.append(unit)
+	return box_selected_units
