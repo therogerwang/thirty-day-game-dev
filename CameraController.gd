@@ -22,28 +22,8 @@ func _ready():
 func _process(delta):
 	perform_camera_movement()
 	
+	perform_unit_selection()
 	
-	var mouse_pos : Vector2 = get_viewport().get_mouse_position()
-	if Input.is_action_just_pressed("ui_select"):
-		selection_box.start_sel_pos = mouse_pos
-		start_sel_pos = mouse_pos
-		
-			
-			
-	if Input.is_action_pressed("ui_select"):
-		selection_box.m_pos = mouse_pos
-		selection_box.is_visible = true
-	else:
-		selection_box.is_visible = false
-		
-	if Input.is_action_just_released("ui_select"):
-		
-		if abs(start_sel_pos.distance_to(mouse_pos)) > 8:
-			update_player_selection(get_units_in_box(start_sel_pos, mouse_pos))
-		else:
-			update_player_selection([
-				get_obj_under_mouse(mouse_pos, environ_collision_mask)
-			])
 		
 		
 	
@@ -51,7 +31,7 @@ func _physics_process(delta):
 	
 	if Input.is_action_just_pressed("ui_move_click"):
 		var mouse_pos : Vector2 = get_viewport().get_mouse_position()
-		move_all_units(mouse_pos)
+		move_selected_units(mouse_pos, Globals.TEAMS.PLAYER)
 			
 #		print("clicked position %s" % clicked_pos )
 	
@@ -132,12 +112,50 @@ func move_all_units(mouse_pos: Vector2) -> void:
 	print("clicked position ", clicked_pos)
 	get_tree().call_group("units","move_to", clicked_pos)
 #
+"""
+Issues move orders to units in selected_units to a mouse position.
+Only issues orders to units on team var team_ownership.
 
+"""
+func move_selected_units(mouse_pos: Vector2, team_ownership: int) -> void:
+	
+	print("moving selected units")
+	
+	var clicked_pos = get_mouse_raycast_collision_coords(mouse_pos, environ_collision_mask)
+	for obj in selected_units:
+		if obj is class_worker:
+			if obj.team == team_ownership:
+				obj.move_to(clicked_pos)
 
 
 
 
 ################ UNIT SELECTION ######################
+
+func perform_unit_selection() -> void:
+	var mouse_pos : Vector2 = get_viewport().get_mouse_position()
+	if Input.is_action_just_pressed("ui_select"):
+		selection_box.start_sel_pos = mouse_pos
+		start_sel_pos = mouse_pos
+		
+			
+			
+	if Input.is_action_pressed("ui_select"):
+		selection_box.m_pos = mouse_pos
+		selection_box.is_visible = true
+	else:
+		selection_box.is_visible = false
+		
+	if Input.is_action_just_released("ui_select"):
+		
+		if abs(start_sel_pos.distance_to(mouse_pos)) > 10:
+			update_player_selection(get_units_in_box(start_sel_pos, mouse_pos))
+		else:
+			update_player_selection([
+				get_obj_under_mouse(mouse_pos, environ_collision_mask)
+			])
+
+
 """
 Given an array of objects to select, checks each obj,and updates the class's 
 selected_units array and performs routines associated with unit selection on each unit.
