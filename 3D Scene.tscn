@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Assets/Worker.tscn" type="PackedScene" id=1]
 [ext_resource path="res://SelectionBox.gd" type="Script" id=2]
@@ -9,14 +9,16 @@
 [sub_resource type="CylinderMesh" id=2]
 
 [sub_resource type="NavigationMesh" id=3]
-vertices = PoolVector3Array( -14.4, 0.4, 7.2, -14.4, 0.4, 14.4, -7.2, 0.4, 14.4, 7.2, 0.4, 14.4, 14.4, 0.4, 14.4, 14.4, 0.4, 7.2, 14.4, 0.4, -7.2, 14.4, 0.4, -14.4, 7.2, 0.4, -14.4, -7.2, 0.4, -14.4, -14.4, 0.4, -14.4, -14.4, 0.4, -7.2, -14.4, 0.4, 9.53674e-07, -14.4, 0.4, 7.2, -7.2, 0.4, 14.4, 9.53674e-07, 0.4, 14.4, 7.2, 0.4, 14.4, 14.4, 0.4, 7.2, 14.4, 0.4, 9.53674e-07, 14.4, 0.4, -7.2, 7.2, 0.4, -14.4, 9.53674e-07, 0.4, -14.4, 9.53674e-07, 0.4, -14.4, -7.2, 0.4, -14.4, -14.4, 0.4, -7.2, -14.4, 0.4, 9.53674e-07, 14.4, 0.4, 9.53674e-07, 9.53674e-07, 0.4, -14.4, -14.4, 0.4, 9.53674e-07, -7.2, 0.4, 14.4, 9.53674e-07, 0.4, 14.4, 14.4, 0.4, 7.2 )
+vertices = PoolVector3Array( -14.4, 0.4, 7.2, -14.4, 0.4, 14.4, -7.2, 0.4, 14.4, 7.2, 0.4, 14.4, 14.4, 0.4, 14.4, 14.4, 0.4, 7.2, 14.4, 0.4, -7.2, 14.4, 0.4, -14.4, 7.2, 0.4, -14.4, -7.2, 0.4, -14.4, -14.4, 0.4, -14.4, -14.4, 0.4, -7.2, -14.4, 0.4, 0, -14.4, 0.4, 7.2, -7.2, 0.4, 14.4, 0, 0.4, 14.4, 7.2, 0.4, 14.4, 14.4, 0.4, 7.2, 14.4, 0.4, 0, 14.4, 0.4, -7.2, 7.2, 0.4, -14.4, 0, 0.4, -14.4, 0, 0.4, -14.4, -7.2, 0.4, -14.4, -14.4, 0.4, -7.2, -14.4, 0.4, 0, 14.4, 0.4, 0, 0, 0.4, -14.4, -14.4, 0.4, 0, -7.2, 0.4, 14.4, 0, 0.4, 14.4, 14.4, 0.4, 7.2 )
 polygons = [ PoolIntArray( 2, 1, 0 ), PoolIntArray( 5, 4, 3 ), PoolIntArray( 8, 7, 6 ), PoolIntArray( 11, 10, 9 ), PoolIntArray( 14, 13, 12 ), PoolIntArray( 17, 16, 15 ), PoolIntArray( 19, 18, 20 ), PoolIntArray( 20, 18, 21 ), PoolIntArray( 23, 22, 24 ), PoolIntArray( 24, 22, 25 ), PoolIntArray( 31, 30, 26 ), PoolIntArray( 26, 30, 29 ), PoolIntArray( 26, 29, 28 ), PoolIntArray( 26, 28, 27 ) ]
 
 [sub_resource type="BoxShape" id=4]
 extents = Vector3( 15, 1, 15 )
 
-[sub_resource type="CubeMesh" id=5]
-size = Vector3( 30, 2, 30 )
+[sub_resource type="PlaneMesh" id=5]
+size = Vector2( 30, 30 )
+
+[sub_resource type="SpatialMaterial" id=6]
 
 [node name="3D Scene" type="Spatial"]
 
@@ -51,14 +53,14 @@ __meta__ = {
 navmesh = SubResource( 3 )
 
 [node name="Floor" type="StaticBody" parent="Navigation/NavigationMeshInstance"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
 
 [node name="CollisionShape" type="CollisionShape" parent="Navigation/NavigationMeshInstance/Floor"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
 shape = SubResource( 4 )
 
 [node name="MeshInstance" type="MeshInstance" parent="Navigation/NavigationMeshInstance/Floor"]
 mesh = SubResource( 5 )
-material/0 = null
+material/0 = SubResource( 6 )
 
 [node name="Worker" parent="Navigation" instance=ExtResource( 1 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2.355 )
